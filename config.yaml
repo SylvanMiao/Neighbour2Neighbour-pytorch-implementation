@@ -24,7 +24,7 @@ split_seed: 42
 num_workers: 4
 val_num_workers: 0
 
-device: "cuda:0"
+device: "cuda:1"
 
 n_feature: 48
 blindspot: false

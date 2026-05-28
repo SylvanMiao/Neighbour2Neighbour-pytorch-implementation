@@ -35,14 +35,13 @@ def _save_image(arr, path, max_val):
     arr = np.clip(arr * max_val, 0, max_val).round()
     if max_val > 255:
         out = arr.astype(np.uint16)
-        Image.fromarray(out, mode='I;16').save(path)
     else:
         out = arr.astype(np.uint8)
-        Image.fromarray(out, mode='L').save(path)
+    Image.fromarray(out).save(path)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Noise2Void inference')
+    parser = argparse.ArgumentParser(description='Neighbour2Neighbour inference')
     parser.add_argument('--config', type=str, default='config.yaml')
     args = parser.parse_args()
 
@@ -56,20 +55,16 @@ def main():
 
     in_channels = cfg.get('in_channels', 1)
     out_channels = cfg.get('out_channels', 1)
-    depth = cfg.get('depth', 5)
-    padding = cfg.get('padding', True)
-    batch_norm = cfg.get('batch_norm', True)
-    up_mode = cfg.get('up_mode', 'upconv')
-    interpolation_mode = cfg.get('interpolation_mode', 'nearest')
+    n_feature = cfg.get('n_feature', 48)
+    blindspot = cfg.get('blindspot', False)
+    zero_last = cfg.get('zero_last', False)
 
     model = UNet(
-        in_channels=in_channels,
-        out_channels=out_channels,
-        depth=depth,
-        padding=padding,
-        batch_norm=batch_norm,
-        up_mode=up_mode,
-        interpolation_mode=interpolation_mode,
+        in_nc=in_channels,
+        out_nc=out_channels,
+        n_feature=n_feature,
+        blindspot=blindspot,
+        zero_last=zero_last,
     )
 
     if torch.cuda.is_available() and cfg.get('device', '').startswith('cuda'):
@@ -96,8 +91,7 @@ def main():
         for path in paths:
             tensor, max_val = _load_image(path)
             tensor = tensor.to(device)
-            pred = model(tensor)
-            # pred = torch.clamp(pred, 0.0, 1.0)
+            pred = model(tensor).clamp(0.0, 1.0)
             print(
                 '{}: input=({:.4f},{:.4f}) pred=({:.4f},{:.4f})'.format(
                     path.name,

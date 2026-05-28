@@ -49,8 +49,9 @@ class Neighbour2Neighbour(Dataset):
         if h < patch_size[0] or w < patch_size[1]:
             raise ValueError('patch_size must be <= image size')
 
-        top = np.random.randint(0, h - patch_size[0])
-        left = np.random.randint(0, w - patch_size[1])
+        # 处理一下之前框架里面的off-by-one问题
+        top = np.random.randint(0, h - patch_size[0] + 1)
+        left = np.random.randint(0, w - patch_size[1] + 1)
 
         patch = img[top:top + patch_size[0], left:left + patch_size[1], :]
         return patch, (top, left, top + patch_size[0], left + patch_size[1])
